@@ -1,0 +1,6 @@
+build/
+Loot.*
+Party.*
+Creature.*
+RoomVisitor.*
+Content.hh
