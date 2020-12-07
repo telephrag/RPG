@@ -3,22 +3,22 @@
 
 Dungeon::Dungeon(unsigned int n, unsigned int m) 
 {
-	this->layout = new Room** [n];
-	
-	for ( unsigned int i = 0; i < n; i++ )
-		layout[i] = new Room* [m];
-	
-	for ( unsigned int i = 0; i < n; i++ ) 
-	{
-		for ( unsigned int j = 0; j < m; j++ )
-		{
-			layout[i][j] = nullptr;
-		}
-	}
-	
+    this->layout = new Room** [n];
+    
+    for ( unsigned int i = 0; i < n; i++ )
+        layout[i] = new Room* [m];
+    
+    for ( unsigned int i = 0; i < n; i++ ) 
+    {
+        for ( unsigned int j = 0; j < m; j++ )
+        {
+            layout[i][j] = nullptr;
+        }
+    }
+    
     this->height = n; // The FIRST coordinate, row id
-	this->width = m;  // The SECOND coordinate, column id
-	// See buildRoom() in SampleBuilder class
+    this->width = m;  // The SECOND coordinate, column id
+    // See buildRoom() in SampleBuilder class
 }
 
 Dungeon::~Dungeon() {}
@@ -38,22 +38,22 @@ Room* Dungeon::getElem(int y, int x) { return this->layout[x][y]; }
 
 void Dungeon::setEntrance(int y, int x)
 {
-	this->entryX = x;
-	this->entryY = y;
+    this->entryX = x;
+    this->entryY = y;
 }
 
 void Dungeon::displayMap()
 {
-	for ( unsigned int i = 0; i < this->height; i++ )
-	{
-		for ( unsigned int j = 0; j < this->width; j++ )
-		{
-			if (layout[i][j] != nullptr) 
-				std::cout << "[]";
-			else 
-				std::cout << "--";
-		}
-		std::cout << std::endl;
-	}
+    for ( unsigned int i = 0; i < this->height; i++ )
+    {
+        for ( unsigned int j = 0; j < this->width; j++ )
+        {
+            if (layout[i][j] != nullptr) 
+                std::cout << "[]";
+            else 
+                std::cout << "--";
+        }
+        std::cout << std::endl;
+    }
 }
 

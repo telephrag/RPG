@@ -11,20 +11,21 @@
 // TODO: code class Printer that shows enemy's and player's party in a single row.
 
 int main() {
-	
-	DungeonMaster* master = new DungeonMaster();
-	SampleBuilder* builder = new SampleBuilder();
-	
-	master->setBuilder(builder);
-	master->makeSampleDungeon();
-	
-	Dungeon* dungeon = builder->returnResult();
-	
-	dungeon->displayMap();
-	
-	delete master;
-	delete builder;
     
+    DungeonMaster* master = new DungeonMaster();
+    SampleBuilder* builder = new SampleBuilder();
+    
+    master->setBuilder(builder);
+    master->makeSampleDungeon();
+    
+    Dungeon* dungeon = builder->returnResult();
+    
+    dungeon->displayMap();
+    
+    delete master;
+    delete builder;
+    
+    std::cin.ignore();
     std::cin.get();
     
     return 0;

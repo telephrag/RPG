@@ -5,12 +5,12 @@
 class DungeonMaster
 {
 private:
-	Builder* builder;
-	
+    Builder* builder;
+    
 public:
-	~DungeonMaster();
-	DungeonMaster();
-	void setBuilder(Builder* newBuilder);
-	void makeSampleDungeon();
-	
+    ~DungeonMaster();
+    DungeonMaster();
+    void setBuilder(Builder* newBuilder);
+    void makeSampleDungeon();
+    
 };
