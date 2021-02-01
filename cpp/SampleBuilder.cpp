@@ -1,13 +1,32 @@
 
 #include "SampleBuilder.hh"
 
-SampleBuilder::SampleBuilder() {}
+SampleBuilder::SampleBuilder() 
+{
+    this->lineContainer = new std::vector<CoordVector>();
+}
 
 
 SampleBuilder::~SampleBuilder() 
 {
     std::cout << "Builder has finished his work." << std::endl;
 }
+
+
+void SampleBuilder::initLockedCellsMap()
+{
+    const unsigned int H = this->dungeon->getHeight();
+    const unsigned int W = this->dungeon->getWidth();
+    
+    this->lockedCells = new bool*[H];
+    for (unsigned int i = 0; i < H; i++)
+        this->lockedCells[i] = new bool[W];
+    
+    for (unsigned int i = 0; i < H; i++)
+        for (unsigned int j = 0; j < W; j++)
+            this->lockedCells[i][j] = false;
+}
+
 
 void SampleBuilder::initNewDungeon(
     int threashold, 
@@ -19,6 +38,8 @@ void SampleBuilder::initNewDungeon(
     int width = (rand() % widthLimit) + threashold;
     Dungeon* temp = new Dungeon(height, width);
     this->dungeon = temp;
+    
+    initLockedCellsMap();
 }
 
 
@@ -71,47 +92,30 @@ std::pair<int, int> SampleBuilder::setCurrentPos()
 }
 
 
-bool** SampleBuilder::initLockedCellsMap()
-{
-    const unsigned int H = this->dungeon->getHeight();
-    const unsigned int W = this->dungeon->getWidth();
-    
-    bool** lockedCells = new bool*[H];
-    for (unsigned int i = 0; i < H; i++)
-        lockedCells[i] = new bool[W];
-    
-    for (unsigned int i = 0; i < H; i++)
-        for (unsigned int j = 0; j < W; j++)
-            lockedCells[i][j] = false;
-
-    return lockedCells;
-}
-
-
 void SampleBuilder::buildInitialLine(
     std::pair<int, int> &currPos,
-    CoordVector *line,
-    bool** lockedCells
+    CoordVector *line
 )
 {
     if (currPos.second == 0)
-        moveRight(currPos, line, lockedCells);
+        moveRight(currPos, line);
     else if (currPos.second == this->dungeon->getWidth() - 1)
-        moveLeft(currPos, line, lockedCells);
+        moveLeft(currPos, line);
     else if (currPos.first == 0)
-        moveUp(currPos, line, lockedCells);
+        moveUp(currPos, line);
     else
-        moveDown(currPos, line, lockedCells);
+        moveDown(currPos, line);
 }
 
 
 void SampleBuilder::deleteLineFromContainer(
-    std::vector<CoordVector> &lineContainer,
     const int &lineID
 )
 {
-    CoordVector().swap(lineContainer.at(lineID));
-    lineContainer.erase(lineContainer.begin() + lineID);
+    std::vector<CoordVector> *tLineContainer = this->lineContainer;
+    
+    CoordVector().swap(tLineContainer->at(lineID));
+    tLineContainer->erase(tLineContainer->begin() + lineID);
 }
 
 
@@ -126,23 +130,21 @@ std::pair<int, int> SampleBuilder::pickPos(
 bool SampleBuilder::tryExtend(
     std::pair<int, int> &currPos,
     CoordVector* line,
-    bool** lockedCells,
-    std::vector<CoordVector> &lineContainer,
     int &lineID
 )
 {
     switch(line->size())
     {
         case 0:
-            deleteLineFromContainer(lineContainer, lineID);
+            deleteLineFromContainer(lineID);
         case 1:
         {
             currPos = line->at(0); 
-            if (extend(currPos, line, lockedCells)) 
+            if (extend(currPos, line)) 
                 return true;
             else
             {
-                deleteLineFromContainer(lineContainer, lineID);
+                deleteLineFromContainer(lineID);
                 return false;
             }
         }
@@ -158,15 +160,12 @@ void SampleBuilder::generateLayout()
     std::pair<int, int> currPos = setCurrentPos();
     std::cout << "Entry coords are: " << currPos.first << " " << currPos.second << std::endl;
     
-    bool** lockedCells = initLockedCellsMap();        
-    
     CoordVector *line = new CoordVector();
     CoordVector *newLine = new CoordVector();
-    std::vector<CoordVector> lineContainer;
+    //std::vector<CoordVector> lineContainer;
 
-    buildInitialLine(currPos, line, lockedCells);
-    
-    lineContainer.push_back(*line);
+    buildInitialLine(currPos, line);
+    addLineToContainer(line);
     
     int seed;
     std::cout << "Please input desired generation seed: "; 
@@ -176,18 +175,18 @@ void SampleBuilder::generateLayout()
     {
         std::cout << ">> " << i << "\n";
         
-        displayLineContainerContents(lineContainer);
+        displayLineContainerContents();
         
         srand(seed + i);
         
-        int lineID = pickLine(lineContainer); 
-        line = &lineContainer.at(lineID); 
+        int lineID = pickLine(); 
+        line = &this->lineContainer->at(lineID); 
         
         if (line->size() > 1) // pickPos()
             currPos = pickPos(line);
         else
         {
-            if ( tryExtend(currPos, line, lockedCells, lineContainer, lineID) )
+            if ( tryExtend(currPos, line, lineID) )
                 currPos = pickPos(line);
             else
             {
@@ -203,38 +202,40 @@ void SampleBuilder::generateLayout()
         
         if ( isHorizontal(line) )
         {
-            moveUp(currPos, newLine, lockedCells);
+            moveUp(currPos, newLine);
             if (newLine->size() > 0)
                 newLine->erase(newLine->begin());
-            moveDown(currPos, newLine, lockedCells);
+            moveDown(currPos, newLine);
         }
         else if (isVertical(line))
         {
-            moveLeft(currPos, newLine, lockedCells);
+            moveLeft(currPos, newLine);
             if (newLine->size() > 0)
                 newLine->erase(newLine->begin());
-            moveRight(currPos, newLine, lockedCells); 
+            moveRight(currPos, newLine); 
         }
 
-        removeDepricatedCells(newLine, lockedCells); 
-        removeDepricatedCells(line, lockedCells); 
+        removeDepricatedCells(newLine); 
+        removeDepricatedCells(line); 
         
         if (newLine->size() != 0)
-            addLineToContainer(lineContainer, newLine);
+            addLineToContainer(newLine);
         
         if (line->size() == 0)
         {
-            deleteLineFromContainer(lineContainer, lineID);
+            deleteLineFromContainer(lineID);
         }
         
         this->dungeon->displayMap();
         std::cout << "\n";
-        displayLockedCellsDB(lockedCells, H, W);
+        displayLockedCellsDB(H, W);
         std::cout << "\n";
     }
     
     std::cout << "End result:-----------------------------------------------------" << "\n";
-    displayLockedCellsDB(lockedCells, H, W);
+    displayLockedCellsDB(H, W);
+    
+    this->currPos = currPos;
 }
 
 /* 
@@ -249,14 +250,17 @@ void SampleBuilder::generateLayout()
  *        --[]----
  *        Here (1, 1) will get depricated although we can build from it to the left to (1, 0).
  *        UPD: (1, 1) is the end of horizontal line. Make algorithm consider line endings when depricating;
+ * TODO: Remember why addLineToContainer() is written the way it is.
  * 
  * <Important>
  * TODO: In move methods make use of emplace so that cells coordinates are at correct order.
  * 
+ * TODO: Use noise functions instead of rand();
+ * 
  * TODO: Refactoring
  *       1) Moving to private methods that should be there.
- *       4) Simplify the code where possible.
- *       6) Code proper destructor.
+ *       2) Simplify the code where possible.
+ *       3) Code proper destructor.
  *
  * TODO: Keep debugging this sucker.
  * 
@@ -264,7 +268,6 @@ void SampleBuilder::generateLayout()
  * NOTE: 3 in a block rule is that a square block of 4 cells should have no more than
  *        3 initialized cells. 
  */
-
 
 
 bool SampleBuilder::isInLine( // Removes from line coordinates matching given.
@@ -279,21 +282,20 @@ bool SampleBuilder::isInLine( // Removes from line coordinates matching given.
 
 
 void SampleBuilder::addLineToContainer(
-    std::vector<CoordVector> &container, 
     CoordVector *line
 )
 {
-    container.emplace(container.end());
-    container.at(container.size() - 1) = *line;
+    std::vector<CoordVector> *tLineContainer = this->lineContainer;
+    
+    tLineContainer->emplace(tLineContainer->end());
+    tLineContainer->at(tLineContainer->size() - 1) = *line;
 }
 
 
-int SampleBuilder::pickLine(
-    const std::vector<CoordVector> &lineContainer
-)
+int SampleBuilder::pickLine()
 {
-    if (lineContainer.size() > 0)
-        return rand() % lineContainer.size();
+    if (this->lineContainer->size() > 0)
+        return rand() % this->lineContainer->size();
     else
         throw "No lines to be built upon";
 }
@@ -349,8 +351,7 @@ int SampleBuilder::getFreeDown(
 
 
 int SampleBuilder::lookRight( 
-    const std::pair<int, int> &currPos, 
-    bool** lockedCells 
+    const std::pair<int, int> &currPos
 )
 {
     const int R = getFreeRight(currPos); 
@@ -358,12 +359,14 @@ int SampleBuilder::lookRight(
         return 0;
     
     RoomGrid& tLayout = this->dungeon->getLayout();
+    bool** tLockedCells = this->lockedCells;
+    
     int roomsInARow = 0;
     int res = 0;
     
     for (int i = currPos.second; i < this->dungeon->getWidth(); i++)
     {
-        if (lockedCells[currPos.first][i])
+        if (tLockedCells[currPos.first][i])
             break;
         
         if (tLayout[currPos.first][i] == nullptr)
@@ -386,15 +389,15 @@ int SampleBuilder::lookRight(
 bool SampleBuilder::buildRight(
     const std::pair<int, int> &currPos,
     CoordVector *line,
-    bool** lockedCells,
     const int range
 )
 {
     RoomGrid& tLayout = this->dungeon->getLayout(); 
-        
+    bool** tLockedCells = this->lockedCells;
+    
     for (int i = currPos.second; i < range; i++)
     {
-        if (lockedCells[currPos.first][i])
+        if (tLockedCells[currPos.first][i])
             break;
         
         if (tLayout[currPos.first][i] == nullptr)
@@ -403,7 +406,7 @@ bool SampleBuilder::buildRight(
         }
         
         std::pair<int, int> pos(currPos.first, i);
-        scanAndLockAroundPos(lockedCells, pos, tLayout);
+        scanAndLockAroundPos(pos, tLayout);
         line->push_back(pos);
     }
     
@@ -416,19 +419,18 @@ bool SampleBuilder::buildRight(
 
 bool SampleBuilder::moveRight(
     const std::pair<int, int> &currPos, 
-    CoordVector *line, 
-    bool** lockedCells
+    CoordVector *line
 ) 
 {
     isInLine(line, currPos); 
         
-    int R = lookRight(currPos, lockedCells);
+    int R = lookRight(currPos);
     int range = randRange(R) + currPos.second;
     
     if (range > this->dungeon->getWidth() - 1)
         range = this->dungeon->getWidth() - 1;
     
-    if (buildRight(currPos, line, lockedCells, range))
+    if (buildRight(currPos, line, range))
         return true;
     else
         return false;
@@ -436,8 +438,7 @@ bool SampleBuilder::moveRight(
 
 
 int SampleBuilder::lookLeft(
-    const std::pair<int, int> &currPos, 
-    bool** lockedCells
+    const std::pair<int, int> &currPos
 )
 {
     const int L = getFreeLeft(currPos); 
@@ -445,12 +446,14 @@ int SampleBuilder::lookLeft(
         return 0;
     
     RoomGrid& tLayout = this->dungeon->getLayout();
+    bool** tLockedCells = this->lockedCells;
+    
     int roomsInARow = 0;
     int res = 0;
     
     for (int i = currPos.second; i >= 0; i--)
     {
-        if (lockedCells[currPos.first][i])
+        if (tLockedCells[currPos.first][i])
             break;
         
         if (tLayout[currPos.first][i] == nullptr)
@@ -472,15 +475,16 @@ int SampleBuilder::lookLeft(
 
 bool SampleBuilder::buildLeft(
     const std::pair<int, int>& currPos, 
-    CoordVector* line, bool ** lockedCells, 
+    CoordVector* line, 
     const int range
 )
 {
     RoomGrid& tLayout = this->dungeon->getLayout();
+    bool** tLockedCells = this->lockedCells;
     
     for (int i = currPos.second; i >= range; i--)
     {
-        if (lockedCells[currPos.first][i])
+        if (tLockedCells[currPos.first][i])
             break;
         
         if (tLayout[currPos.first][i] == nullptr)
@@ -489,7 +493,7 @@ bool SampleBuilder::buildLeft(
         }
         
         std::pair<int, int> pos(currPos.first, i);
-        scanAndLockAroundPos(lockedCells, pos, tLayout);
+        scanAndLockAroundPos(pos, tLayout);
         line->push_back(pos);
     }
     
@@ -502,19 +506,18 @@ bool SampleBuilder::buildLeft(
 
 bool SampleBuilder::moveLeft(
     const std::pair<int, int> &currPos, 
-    CoordVector *line, 
-    bool** lockedCells
+    CoordVector *line
 ) 
 {
     isInLine(line, currPos);
         
-    int L = lookLeft(currPos, lockedCells);
+    int L = lookLeft(currPos);
     int range = currPos.second - randRange(L);
     
     if (range < 0)
         range = 0;
     
-    if (buildLeft(currPos, line, lockedCells, range))
+    if (buildLeft(currPos, line, range))
         return true;
     else
         return false;
@@ -522,13 +525,14 @@ bool SampleBuilder::moveLeft(
 
 
 int SampleBuilder::lookUp(
-    const std::pair<int, int> &currPos, 
-    bool** lockedCells
+    const std::pair<int, int> &currPos
 )
 {
     const int U = getFreeUp(currPos);
     if (U == 0)
         return 0;
+    
+    bool** tLockedCells = this->lockedCells;
     
     RoomGrid& tLayout = this->dungeon->getLayout();
     int roomsInARow = 0;
@@ -536,7 +540,7 @@ int SampleBuilder::lookUp(
     
     for (int j = currPos.first; j < this->dungeon->getHeight(); j++)
     {
-        if (lockedCells[j][currPos.second])
+        if (tLockedCells[j][currPos.second])
             break;
         
         if (tLayout[j][currPos.second] == nullptr)
@@ -558,17 +562,17 @@ int SampleBuilder::lookUp(
 bool SampleBuilder::buildUp(
     const std::pair<int, int>& currPos, 
     CoordVector* line, 
-    bool ** lockedCells, 
     const int range
 )
 {
     RoomGrid& tLayout = this->dungeon->getLayout();
+    bool** tLockedCells = this->lockedCells;
     
     isInLine(line, currPos);
     
     for (int j = currPos.first; j < range; j++)
     {
-        if (lockedCells[j][currPos.second])
+        if (tLockedCells[j][currPos.second])
             break;
         
         if (tLayout[j][currPos.second] == nullptr)
@@ -577,7 +581,7 @@ bool SampleBuilder::buildUp(
         }
         
         std::pair<int, int> pos(j, currPos.second);
-        scanAndLockAroundPos(lockedCells, pos, tLayout);
+        scanAndLockAroundPos(pos, tLayout);
         line->push_back(pos);
     }
     
@@ -590,17 +594,16 @@ bool SampleBuilder::buildUp(
 
 bool SampleBuilder::moveUp(
     const std::pair<int, int> &currPos, 
-    CoordVector *line, 
-    bool** lockedCells 
+    CoordVector *line 
 ) 
 {
-    int U = lookUp(currPos, lockedCells); 
+    int U = lookUp(currPos); 
     int range = currPos.first + randRange(U);
     
     if (range > this->dungeon->getHeight() - 1)
         range = this->dungeon->getHeight() - 1;    
     
-    if (buildUp(currPos, line, lockedCells, range))
+    if (buildUp(currPos, line, range))
         return true;
     else
         return false;
@@ -608,8 +611,7 @@ bool SampleBuilder::moveUp(
 
 
 int SampleBuilder::lookDown(
-    const std::pair<int, int> &currPos, 
-    bool **lockedCells
+    const std::pair<int, int> &currPos
 )
 {
     const int D = getFreeDown(currPos);
@@ -617,12 +619,14 @@ int SampleBuilder::lookDown(
         return 0;
     
     RoomGrid& tLayout = this->dungeon->getLayout();
+    bool** tLockedCells = this->lockedCells;
+    
     int roomsInARow = 0;
     int res = 0;
     
     for (int j = currPos.first; j >= 0; j--)
     {
-        if (lockedCells[j][currPos.second])
+        if (tLockedCells[j][currPos.second])
             break;
         
         if (tLayout[j][currPos.second] == nullptr)
@@ -644,15 +648,15 @@ int SampleBuilder::lookDown(
 bool SampleBuilder::buildDown(
     const std::pair<int, int>& currPos, 
     CoordVector* line, 
-    bool ** lockedCells, 
     const int range
 )
 {
     RoomGrid& tLayout = this->dungeon->getLayout();
+    bool** tLockedCells = this->lockedCells;
     
     for (int j = currPos.first; j >= range; j--)
     {
-        if (lockedCells[j][currPos.second])
+        if (tLockedCells[j][currPos.second])
             break;
         
         if (tLayout[j][currPos.second] == nullptr)
@@ -661,7 +665,7 @@ bool SampleBuilder::buildDown(
         }
             
         std::pair<int, int> pos(j, currPos.second);
-        scanAndLockAroundPos(lockedCells, pos, tLayout);
+        scanAndLockAroundPos(pos, tLayout);
         line->push_back(pos);
     }
     
@@ -674,10 +678,10 @@ bool SampleBuilder::buildDown(
 
 bool SampleBuilder::moveDown(
     const std::pair<int, int> &currPos, 
-    CoordVector *line, 
-    bool** lockedCells) 
+    CoordVector *line
+) 
 {
-    int D = lookDown(currPos, lockedCells);
+    int D = lookDown(currPos);
     int range = currPos.first - randRange(D);
     
     if (range < 0)
@@ -685,7 +689,7 @@ bool SampleBuilder::moveDown(
     
     isInLine(line, currPos);
     
-    if (buildDown(currPos, line, lockedCells, range))
+    if (buildDown(currPos, line, range))
         return true;
     else
         return false;
@@ -694,8 +698,7 @@ bool SampleBuilder::moveDown(
 
 bool SampleBuilder::extend(
     const std::pair<int, int> &currPos, 
-    CoordVector *line, 
-    bool** lockedCells
+    CoordVector *line
 )
 {
     std::cout << "Attempting to extend at coordinate " << currPos.first << ", " << currPos.second << std::endl;
@@ -708,24 +711,25 @@ bool SampleBuilder::extend(
     bool right = false, left = false, up = false, down = false;
     // create copy of line
     RoomGrid& tLayout = this->dungeon->getLayout();
+    bool** tLockedCells = this->lockedCells;
     
     if (R != 0 || L != 0)
     {
         if (R != 0 && tLayout[currPos.first][currPos.second + 1] == nullptr)
-            right = moveRight(currPos, line, lockedCells);
+            right = moveRight(currPos, line);
         if (L != 0 && tLayout[currPos.first][currPos.second - 1] == nullptr)
-            left = moveLeft(currPos, line, lockedCells);
+            left = moveLeft(currPos, line);
     }
     else
     {
         if (U != 0 && tLayout[currPos.first + 1][currPos.second] == nullptr)
-            up = moveUp(currPos, line, lockedCells); 
+            up = moveUp(currPos, line); 
         if (D != 0 && tLayout[currPos.first - 1][currPos.second] == nullptr)
-            down = moveDown(currPos, line, lockedCells);
+            down = moveDown(currPos, line);
     }
     
     if ( (right && left) || (up && down) )
-        lockedCells[currPos.first][currPos.second] = true;
+        tLockedCells[currPos.first][currPos.second] = true;
         
     if (right || left || up || down)
     {
@@ -772,7 +776,6 @@ bool SampleBuilder::isVertical(
 
 
 void SampleBuilder::scanAndLockAroundPos(
-    bool** lockedCells, 
     const std::pair<int, int> &currPos, 
     RoomGrid& tLayout
 )
@@ -782,6 +785,7 @@ void SampleBuilder::scanAndLockAroundPos(
     const int U = getFreeUp(currPos);
     const int D = getFreeDown(currPos);
     
+    bool** tLockedCells = this->lockedCells;
     int globalCount = 0;
     
     if (R != 0)
@@ -813,7 +817,7 @@ void SampleBuilder::scanAndLockAroundPos(
                 
             if (count == 3)
             {
-                lockedCells[empty.first][empty.second] = true;
+                tLockedCells[empty.first][empty.second] = true;
                 globalCount++;
             }
         }
@@ -845,7 +849,7 @@ void SampleBuilder::scanAndLockAroundPos(
                 
             if (count == 3)
             {
-                lockedCells[empty.first][empty.second] = true;
+                tLockedCells[empty.first][empty.second] = true;
                 globalCount++;
             }
         }
@@ -880,7 +884,7 @@ void SampleBuilder::scanAndLockAroundPos(
                 
             if (count == 3)
             {
-                lockedCells[empty.first][empty.second] = true;
+                tLockedCells[empty.first][empty.second] = true;
                 globalCount++;
             }
         }
@@ -912,7 +916,7 @@ void SampleBuilder::scanAndLockAroundPos(
                 
             if (count == 3)
             {
-                lockedCells[empty.first][empty.second] = true;
+                tLockedCells[empty.first][empty.second] = true;
                 globalCount++;
             }
         }
@@ -920,110 +924,43 @@ void SampleBuilder::scanAndLockAroundPos(
     
     if (globalCount == 4)
     {
-        lockedCells[currPos.first][currPos.second] = true;
-        //lockCellsHorizontalToPos(lockedCells, currPos);
-        //lockCellsVerticalToPos(lockedCells, currPos);
+        tLockedCells[currPos.first][currPos.second] = true;
     }
-}
-
-
-void SampleBuilder::lockCellsDiagonalToPos(
-    bool** lockedCells, 
-    const std::pair<int, int> &currPos
-)
-{
-    const int R = getFreeRight(currPos);
-    const int L = getFreeLeft(currPos);
-    const int U = getFreeUp(currPos);
-    const int D = getFreeDown(currPos);
-    
-    if (R != 0)
-    {
-        if (U != 0)
-            lockedCells[currPos.first + 1][currPos.second + 1] = true;
-        if (D != 0)
-            lockedCells[currPos.first - 1][currPos.second + 1] = true;
-    }
-    
-    if (L != 0)
-    {
-        if (U != 0)
-            lockedCells[currPos.first + 1][currPos.second - 1] = true;
-        if (D != 0)
-            lockedCells[currPos.first - 1][currPos.second - 1] = true;
-    }
-    
-    lockedCells[currPos.first][currPos.second] = true;
-}
-
-
-void SampleBuilder::lockCellsHorizontalToPos(
-    bool** lockedCells, 
-    const std::pair<int, int> &currPos
-)
-{
-    const int R = getFreeRight(currPos);
-    const int L = getFreeLeft(currPos);
-    
-    if (R != 0)
-    {
-        lockedCells[currPos.first][currPos.second + 1] = true;
-    }
-    
-    if (L != 0)
-    {
-        lockedCells[currPos.first][currPos.second - 1] = true;
-    }
-}
-
-
-void SampleBuilder::lockCellsVerticalToPos(
-    bool** lockedCells, 
-    const std::pair<int, int> &currPos
-)
-{
-    const int U = getFreeUp(currPos);
-    const int D = getFreeDown(currPos);
-    
-    if (U != 0)
-        lockedCells[currPos.first + 1][currPos.second] = true;
-    
-    if (D != 0)
-        lockedCells[currPos.first - 1][currPos.second] = true;
 }
 
 
 void SampleBuilder::displayLockedCellsDB(
-    bool** lockedCells, 
     const unsigned int H, 
     const unsigned int W
 )
 {
-        for (unsigned int i = 0; i < H; i++)
-        {
-            for (unsigned int j = 0; j < W; j++)
-                if (lockedCells[i][j])
-                    std::cout << "L";
-                else
-                    std::cout << "-";
-                    
-            std::cout << std::endl;
-        }
-        
+    bool** tLockedCells = this->lockedCells;
+    
+    for (unsigned int i = 0; i < H; i++)
+    {
+        for (unsigned int j = 0; j < W; j++)
+            if (tLockedCells[i][j])
+                std::cout << "L";
+            else
+                std::cout << "-";
+                
         std::cout << std::endl;
-        std::cout << std::endl;
+    }
+    
+    std::cout << std::endl;
+    std::cout << std::endl;
 }
 
 
-void SampleBuilder::displayLineContainerContents(
-    std::vector<CoordVector>& lineContainer
-)
+void SampleBuilder::displayLineContainerContents()
 {
-    for (int i = 0; i < lineContainer.size(); i++)
+    std::vector<CoordVector> *tLineContainer = this->lineContainer;
+    
+    for (int i = 0; i < tLineContainer->size(); i++)
     {
         std::cout << i << ": ";
-        for (int j = 0; j < lineContainer[i].size(); j++)
-            std::cout << "(" << lineContainer[i].at(j).first << ";" << lineContainer[i].at(j).second << ") ";
+        for (int j = 0; j < tLineContainer->at(i).size(); j++)
+            std::cout << "(" << tLineContainer->at(i).at(j).first << ";" << tLineContainer->at(i).at(j).second << ") ";
         std::cout << "\n";
     }
 }
@@ -1033,13 +970,14 @@ void SampleBuilder::displayLineContainerContents(
 
 
 void SampleBuilder::removeDepricatedCells(
-    CoordVector *line, 
-    bool** lockedCells
+    CoordVector *line
 )
 {
+    bool** tLockedCells = this->lockedCells;
+    
     for (unsigned int i = 0; i < line->size(); i++)
     {
-        if (lockedCells[line->at(i).first][line->at(i).second])
+        if (tLockedCells[line->at(i).first][line->at(i).second])
             line->erase(line->begin() + i);
     }
 }

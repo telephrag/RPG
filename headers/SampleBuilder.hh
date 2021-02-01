@@ -10,20 +10,22 @@ class SampleBuilder: public Builder
 {   
 private:
     Dungeon* dungeon;
+    std::vector<CoordVector> *lineContainer;
+    bool** lockedCells;
+    std::pair<int, int> currPos;
     
     void buildRoom(
         int y, 
         int x
     );
     
-    std::pair<int, int> setCurrentPos();
+    void initLockedCellsMap();
     
-    bool** initLockedCellsMap();
+    std::pair<int, int> setCurrentPos();
     
     void buildInitialLine(
         std::pair<int, int> &currPos,
-        CoordVector *line,
-        bool** lockedCells
+        CoordVector *line
     );
     
     std::pair<int, int> pickPos(
@@ -31,12 +33,9 @@ private:
     );
     
     bool tryExtend(
-        std::pair<int, int> &currPos,
-        CoordVector* line,
-        bool** lockedCells,
-        std::vector<CoordVector> &lineContainer,
-        int &lineID
-    );
+        std::pair< int, int > &currPos, 
+        CoordVector* line, 
+        int &lineID);
     
     int randRange(
         const int distance
@@ -59,83 +58,72 @@ private:
     );
     
     int lookRight(
-        const std::pair<int, int> &currPos,
-        bool** lockedCells
+        const std::pair<int, int> &currPos
     );
     
     bool buildRight(
         const std::pair<int, int> &currPos,
         CoordVector *line,
-        bool** lockedCells,
         const int range
     );
     
     bool moveRight(
         const std::pair<int, int> &currPos, 
-        CoordVector *line,
-        bool** lockedCells
+        CoordVector *line
     );
     
     
-    int lookLeft(const std::pair<int, int> &currPos,
-                 bool** lockedCells
+    int lookLeft(
+        const std::pair<int, int> &currPos
     );
     
     bool buildLeft(
         const std::pair<int, int> &currPos,
         CoordVector *line,
-        bool** lockedCells,
         const int range
     );
     
     bool moveLeft(
         const std::pair<int, int> &currPos, 
-        CoordVector *line, 
-        bool** lockedCells
+        CoordVector *line
     );
     
 
-    int lookUp(const std::pair<int, int> &currPos,
-               bool** lockedCells
+    int lookUp(
+        const std::pair<int, int> &currPos
     );
     
     bool buildUp(
-        const std::pair<int, int> &currPos,
-        CoordVector *line,
-        bool** lockedCells,
+        const std::pair< int, int > &currPos, 
+        CoordVector* line, 
         const int range
     );
     
     bool moveUp(
         const std::pair<int, int> &currPos, 
-        CoordVector *line,
-        bool** lockedCells
+        CoordVector *line
     );
     
     
     int lookDown(
-        const std::pair<int, int> &currPos,
-        bool** lockedCells
+        const std::pair<int, int> &currPos
     );
     
     bool buildDown(
         const std::pair<int, int> &currPos,
         CoordVector *line,
-        bool** lockedCells,
         const int range
     );
     
     bool moveDown(
         const std::pair<int, int> &currPos, 
-        CoordVector *line,
-        bool** lockedCells
+        CoordVector *line
     );
     
     
     bool extend(
         const std::pair<int, int> &currPos,
-        CoordVector *line,
-        bool** lockedCells
+        CoordVector *line
     );            
     
     
@@ -148,61 +136,36 @@ private:
     );
     
     
-    // legacy
-    void lockCellsDiagonalToPos(
-        bool** lockedCells, 
-        const std::pair<int, int> &currPos
-    );
-    
-    void lockCellsHorizontalToPos(
-        bool** lockedCells, 
-        const std::pair<int, int> &currPos
-    );
-    
-    void lockCellsVerticalToPos(
-        bool** lockedCells, 
-        const std::pair<int, int> &currPos
-    );
-    // end legacy
-    
-    
     void scanAndLockAroundPos(
-        bool** lockedCells, 
         const std::pair<int, int> &currPos, 
         RoomGrid& tLayout
     );
     
     
     void displayLockedCellsDB(
-        bool** lockedCells, 
         const unsigned int H, 
         const unsigned int W
     );
     
-    void displayLineContainerContents(
-        std::vector<CoordVector> &lineContainer
-    );
+    void displayLineContainerContents();
     
     void removeDepricatedCells(
-        CoordVector *line, 
-        bool** lockedCells
-    );
-    
-    bool isInLine(CoordVector *line, std::pair<int, int> pos);
-    
-    void addLineToContainer(
-        std::vector< CoordVector > &container, 
         CoordVector *line
     );
     
-    void deleteLineFromContainer(
-        std::vector<CoordVector> &lineContainer,
-        const int &lineID
+    bool isInLine(
+        CoordVector *line, std::pair<int, int> pos
     );
     
-    int pickLine(
-        const std::vector<CoordVector> &lineContainer
+    void addLineToContainer(
+        CoordVector* line
     );
+    
+    void deleteLineFromContainer(
+        const int& lineID
+    );
+    
+    int pickLine();
     
 public:
     SampleBuilder();
