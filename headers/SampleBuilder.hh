@@ -21,7 +21,7 @@ private:
     
     void initLockedCellsMap();
     
-    std::pair<int, int> setCurrentPos();
+    std::pair<int, int> setStartPosAtEntry();
     
     void buildInitialLine(
         std::pair<int, int> &currPos,
@@ -35,7 +35,14 @@ private:
     bool tryExtend(
         std::pair< int, int > &currPos, 
         CoordVector* line, 
-        int &lineID);
+        int &lineID
+    );
+    
+    bool extendLong(
+        std::pair< int, int > &currPos,
+        CoordVector* line
+    );
+        
     
     int randRange(
         const int distance

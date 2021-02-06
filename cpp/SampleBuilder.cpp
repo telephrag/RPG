@@ -68,7 +68,6 @@ void SampleBuilder::buildEntrance()
     }
     
     this->dungeon->setEntrance(y, x);
-    // this->buildRoom(y, x);
 }
 
 
@@ -79,11 +78,11 @@ void SampleBuilder::buildRoom(
 {
     RoomGrid& temp = this->dungeon->getLayout();
     temp[y][x].reset( new Room() );
-    std::cout << "New room was built at: " << y << ", " << x << std::endl;
+    std::cout << "New room was built at: " << y << ", " << x << std::endl; 
 }
 
 
-std::pair<int, int> SampleBuilder::setCurrentPos()
+std::pair<int, int> SampleBuilder::setStartPosAtEntry()
 {
     std::pair<int, int> currPos;
     currPos.first = this->dungeon->getEntryY();
@@ -148,6 +147,14 @@ bool SampleBuilder::tryExtend(
                 return false;
             }
         }
+        case 2:
+        {
+            currPos = line->at(0);
+            if (extendLong(currPos, line))
+                return true;
+            else
+                return false;
+        }
     }
 }
 
@@ -157,12 +164,11 @@ void SampleBuilder::generateLayout()
     const unsigned int H = this->dungeon->getHeight();
     const unsigned int W = this->dungeon->getWidth();
     
-    std::pair<int, int> currPos = setCurrentPos();
+    std::pair<int, int> currPos = setStartPosAtEntry();
     std::cout << "Entry coords are: " << currPos.first << " " << currPos.second << std::endl;
     
     CoordVector *line = new CoordVector();
     CoordVector *newLine = new CoordVector();
-    //std::vector<CoordVector> lineContainer;
 
     buildInitialLine(currPos, line);
     addLineToContainer(line);
@@ -186,10 +192,16 @@ void SampleBuilder::generateLayout()
             currPos = pickPos(line);
         else
         {
+            std::cout << "Attempting to extend at coordinate " << currPos.first << ", " << currPos.second << std::endl;
+            
             if ( tryExtend(currPos, line, lineID) )
+            {
+                std::cout << "Extension succesful!" << "\n";
                 currPos = pickPos(line);
+            }
             else
             {
+                std::cout << "Extension failed!" << "\n";
                 std::cout << "Skipping iteration\n\n\n";
                 continue;
             }   
@@ -297,7 +309,7 @@ int SampleBuilder::pickLine()
     if (this->lineContainer->size() > 0)
         return rand() % this->lineContainer->size();
     else
-        throw "No lines to be built upon";
+        throw "Error: No lines to be built upon";
 }
 
 
@@ -701,15 +713,12 @@ bool SampleBuilder::extend(
     CoordVector *line
 )
 {
-    std::cout << "Attempting to extend at coordinate " << currPos.first << ", " << currPos.second << std::endl;
-    
     const int R = getFreeRight(currPos);
     const int L = getFreeLeft(currPos);
     const int U = getFreeUp(currPos);
     const int D = getFreeDown(currPos);
     
     bool right = false, left = false, up = false, down = false;
-    // create copy of line
     RoomGrid& tLayout = this->dungeon->getLayout();
     bool** tLockedCells = this->lockedCells;
     
@@ -733,12 +742,48 @@ bool SampleBuilder::extend(
         
     if (right || left || up || down)
     {
-        std::cout << "Extension succesful!" << std::endl;
         return true;
     }
     else
     {
-        std::cout << "Extension failed!" << std::endl;
+        return false;
+    }
+}
+
+
+bool SampleBuilder::extendLong(
+    std::pair<int, int>& currPos, 
+    CoordVector* line
+)
+{
+    if (line->size() < 2)
+    {
+        throw "Recieved line is not long (has length 2 or more). Use extend().";
+    }
+    
+    bool right = false, left = false, up = false, down = false;
+    
+    if ( isHorizontal(line) ) 
+    {
+        up = moveUp(currPos, line);
+        if (up)
+            line->erase(line->begin());
+        down = moveDown(currPos, line);
+    }
+    else
+    {
+        left = moveLeft(currPos, line);
+        if (left)
+            line->erase(line->begin());
+        right = moveRight(currPos, line); 
+    }   
+    
+    if (right || left || up || down)
+    {
+        return true;
+    }
+    else
+    {
         return false;
     }
 }
