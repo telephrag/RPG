@@ -147,7 +147,8 @@ bool SampleBuilder::tryExtend(
                 return false;
             }
         }
-        case 2:
+        
+        if (line->size() > 1)
         {
             currPos = line->at(0);
             if (extendLong(currPos, line))
@@ -176,6 +177,7 @@ void SampleBuilder::generateLayout()
     int seed;
     std::cout << "Please input desired generation seed: "; 
     std::cin >> seed;
+    std::cout << "\n";
     
     for (int i = 0; i < 40; i++)
     {
@@ -230,7 +232,7 @@ void SampleBuilder::generateLayout()
         removeDepricatedCells(newLine); 
         removeDepricatedCells(line); 
         
-        if (newLine->size() != 0)
+        if (newLine->size() >= 2)
             addLineToContainer(newLine);
         
         if (line->size() == 0)
@@ -274,6 +276,9 @@ void SampleBuilder::generateLayout()
  *       2) Simplify the code where possible.
  *       3) Code proper destructor.
  *
+ * TODO: Remake build methods so that they do not add currPos itself to newLine.
+ *       Instead add it manually on newLine creation.
+ * 
  * TODO: Keep debugging this sucker.
  * 
  * <Notes>
