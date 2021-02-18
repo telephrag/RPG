@@ -1,5 +1,6 @@
 
 #include <Dungeon.hh>
+#include <iomanip>
 
 Dungeon::Dungeon(unsigned int n, unsigned int m) 
 {
@@ -42,8 +43,19 @@ void Dungeon::setEntrance(int y, int x)
 
 void Dungeon::displayMap()
 {
+    std::cout << "  ";
+    for (unsigned int k = 0; k < this->getWidth(); k++)
+    {
+        std::cout << std::setw(2);
+        std::cout << std::left << k;
+    }
+    std::cout << "\n";
+        
     for ( unsigned int i = 0; i < this->height; i++ )
     {
+        std::cout << std::setw(2);
+        std::cout << std::left << i;
+        
         for ( unsigned int j = 0; j < this->width; j++ )
         {
             if (layout[i][j] != nullptr) 

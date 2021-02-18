@@ -144,12 +144,11 @@ private:
     
     
     void scanAndLockAroundPos(
-        const std::pair<int, int> &currPos, 
-        RoomGrid& tLayout
+        const std::pair<int, int> &currPos
     );
     
     
-    void displayLockedCellsDB(
+    void displayLockedCells(
         const unsigned int H, 
         const unsigned int W
     );
@@ -160,8 +159,9 @@ private:
         CoordVector *line
     );
     
-    bool isInLine(
-        CoordVector *line, std::pair<int, int> pos
+    void removeDuplicatesInLine(
+        CoordVector* line, 
+        std::pair< int, int > pos
     );
     
     void addLineToContainer(
