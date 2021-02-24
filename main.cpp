@@ -4,11 +4,11 @@
 #include "headers/Dungeon.hh"
 #include "headers/DungeonMaster.hh"
 #include "headers/SampleBuilder.hh"
-#include "headers/Exterrnals.hh"
+#include "headers/Exterrnals.hh" // TODO: figure out wether you need this header
 
 // TODO: code class resposible for dungeons, battles and enemies generation 
 
-// TODO: code class Printer that shows enemy's and player's party in a single row.
+// TODO: code class Printer that shows enemy's and player's party in a single row
 
 int main() {
     

@@ -1,189 +1,197 @@
 
 #pragma once
-#include <Dungeon.hh>
 #include <iostream>
-#include <vector>
 
 using CoordVector = std::vector<std::pair<int, int>>;
 
 class Builder
-{
-protected:
+{   
+private:
     Dungeon* dungeon;
     std::vector<CoordVector> *lineContainer;
     bool** lockedCells;
     std::pair<int, int> currPos;
     
-    virtual void buildRoom(
+    void buildRoom(
         int y, 
         int x
     );
     
-    virtual void initLockedCellsMap(); // done in constructor
+    void initLockedCellsMap();
     
-    virtual std::pair<int, int> setStartPosAtEntry(); 
+    std::pair<int, int> setStartPosAtEntry(); // NOTE private
     
-    virtual void buildInitialLine(
+    void buildInitialLine(
         std::pair<int, int> &currPos,
         CoordVector *line
     );
     
-    virtual int pickLine();
-    
-    virtual void addLineToContainer(
-        CoordVector* line
-    );
-    
-    virtual void deleteLineFromContainer(
-        const int& lineID
-    );
-    
-    virtual std::pair<int, int> pickPos(
+    std::pair<int, int> pickPos(
         const CoordVector* line
     );
     
-    virtual bool isVertical(
-        const CoordVector *line
-    );
-    
-    virtual bool isHorizontal(
-        const CoordVector *line
-    );    
-
-    virtual void scanAndLockAroundPos(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual int randRange(
-        const int distance
-    );
-    
-    virtual int getFreeRight(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual int getFreeLeft(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual int getFreeUp(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual int getFreeDown(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual int lookRight(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual bool buildRight(
-        const std::pair<int, int> &currPos,
-        CoordVector *line,
-        const int range
-    );
-    
-    virtual bool moveRight(
-        const std::pair<int, int> &currPos, 
-        CoordVector *line
-    );
-    
-    virtual int lookLeft(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual bool buildLeft(
-        const std::pair<int, int> &currPos,
-        CoordVector *line,
-        const int range
-    );
-    
-    virtual bool moveLeft(
-        const std::pair<int, int> &currPos, 
-        CoordVector *line
-    );
-
-    virtual int lookUp(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual bool buildUp(
-        const std::pair< int, int > &currPos, 
-        CoordVector* line, 
-        const int range
-    );
-    
-    virtual bool moveUp(
-        const std::pair<int, int> &currPos, 
-        CoordVector *line
-    );
-    
-    virtual int lookDown(
-        const std::pair<int, int> &currPos
-    );
-    
-    virtual bool buildDown(
-        const std::pair<int, int> &currPos,
-        CoordVector *line,
-        const int range
-    );
-    
-    virtual bool moveDown(
-        const std::pair<int, int> &currPos, 
-        CoordVector *line
-    );
-    
-    virtual bool tryExtend(
+    bool tryExtend(
         std::pair< int, int > &currPos, 
         CoordVector* line, 
         int &lineID
     );
     
-    virtual bool extend(
-        const std::pair<int, int> &currPos,
-        CoordVector *line
-    ); 
-    
-    virtual bool extendLong(
+    bool extendLong(
         std::pair< int, int > &currPos,
         CoordVector* line
     );
+        
     
-    virtual void removeDepricatedCells(
+    int randRange(
+        const int distance
+    );
+    
+    int getFreeRight(
+        const std::pair<int, int> &currPos
+    );
+    
+    int getFreeLeft(
+        const std::pair<int, int> &currPos
+    );
+    
+    int getFreeUp(
+        const std::pair<int, int> &currPos
+    );
+    
+    int getFreeDown(
+        const std::pair<int, int> &currPos
+    );
+    
+    int lookRight(
+        const std::pair<int, int> &currPos
+    );
+    
+    bool buildRight(
+        const std::pair<int, int> &currPos,
+        CoordVector *line,
+        const int range
+    );
+    
+    bool moveRight(
+        const std::pair<int, int> &currPos, 
         CoordVector *line
     );
     
-    virtual void removeDuplicatesInLine(
-        CoordVector* line, 
-        std::pair< int, int > pos
+    
+    int lookLeft(
+        const std::pair<int, int> &currPos
     );
     
-    virtual void displayLockedCells(
+    bool buildLeft(
+        const std::pair<int, int> &currPos,
+        CoordVector *line,
+        const int range
+    );
+    
+    bool moveLeft(
+        const std::pair<int, int> &currPos, 
+        CoordVector *line
+    );
+    
+
+    int lookUp(
+        const std::pair<int, int> &currPos
+    );
+    
+    bool buildUp(
+        const std::pair< int, int > &currPos, 
+        CoordVector* line, 
+        const int range
+    );
+    
+    bool moveUp(
+        const std::pair<int, int> &currPos, 
+        CoordVector *line
+    );
+    
+    
+    int lookDown(
+        const std::pair<int, int> &currPos
+    );
+    
+    bool buildDown(
+        const std::pair<int, int> &currPos,
+        CoordVector *line,
+        const int range
+    );
+    
+    bool moveDown(
+        const std::pair<int, int> &currPos, 
+        CoordVector *line
+    );
+    
+    
+    bool extend(
+        const std::pair<int, int> &currPos,
+        CoordVector *line
+    );            
+    
+    
+    bool isVertical(
+        const CoordVector *line
+    );
+    
+    bool isHorizontal(
+        const CoordVector *line
+    );
+    
+    
+    void scanAndLockAroundPos(
+        const std::pair<int, int> &currPos
+    );
+    
+    
+    void displayLockedCells(
         const unsigned int H, 
         const unsigned int W
     );
     
-    virtual void displayLineContainerContents();
- 
+    void displayLineContainerContents();
+    
+    void removeDepricatedCells(
+        CoordVector *line
+    );
+    
+    void removeDuplicatesInLine(
+        CoordVector* line, 
+        std::pair< int, int > pos
+    );
+    
+    void addLineToContainer(
+        CoordVector* line
+    );
+    
+    void deleteLineFromContainer(
+        const int& lineID
+    );
+    
+    int pickLine();
+    
 public:
-    virtual ~Builder() {};
-     
-    virtual void initNewDungeon(
+    Builder();
+    //SampleBuilder(Dungeon* dungeonInConstruction);
+    ~Builder();
+    
+    void initNewDungeon(
         int threashold, 
         int heightLimit, 
-        int widthLimit 
-    ) = 0;
+        int widthLimit
+    );
     
-    virtual void buildEntrance() = 0;
+    void buildEntrance();
     
-    virtual void generateLayout() = 0;
+    void generateLayout();
     
-    virtual void placeEnemies() = 0;
+    void placeEnemies() {};
     
-    virtual void placeTraps() = 0;
+    void placeTraps() {};
     
-    virtual void placeLoot() = 0;
+    void placeLoot() {};
     
-    virtual Dungeon* returnResult();
+    Dungeon* returnResult();
 };

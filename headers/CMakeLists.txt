@@ -6,8 +6,9 @@ target_sources(rpg
         DungeonMaster.hh
         Loot.hh      
         Party.hh
-        Room.hh      
+        Room.hh    
         SampleBuilder.hh
+        Builder.hh
 )
 
 target_include_directories(rpg PUBLIC ${HEADERS})

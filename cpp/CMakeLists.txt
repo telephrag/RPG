@@ -8,6 +8,7 @@ target_sources(rpg
         Party.cpp
         Room.cpp
         SampleBuilder.cpp
+        Builder.cpp
 )
 
 target_include_directories(rpg PRIVATE ${CPP})
